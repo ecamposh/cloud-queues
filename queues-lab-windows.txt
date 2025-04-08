@@ -62,7 +62,7 @@ https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name
 HTTP/2 201 
 server: nginx/1.14.0 (Ubuntu)
 date: Fri, 28 Mar 2025 19:54:28 GMT
-location: /v1/queues/%queue_name%
+location: /v1/queues/my-queue
 content-length: 0
 
 
