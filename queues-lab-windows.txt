@@ -135,13 +135,23 @@ date: Fri, 28 Mar 2025 20:08:47 GMT
 location: /v1/queues/my-queue/messages?ids=67e701cf38834c7f82a702ae,67e701cf38834c7f82a702af,67e701cf38834c7f82a702b0,67e701cf38834c7f82a702b1,67e701cf38834c7f82a702b2
 content-length: 353
 
-{"partial": false, "resources": ["/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae", "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af", "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0", "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1", "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2"]}
+{
+  "partial": false,
+  "resources": [
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2"
+  ]
+}
 
 
 
 # GET stats to show the queue is populated now
 
-curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/stats -D -
+curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" ^
+https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/stats -D -
 
 # json response body
 
@@ -174,7 +184,8 @@ content-length: 313
 
 # GET messages to show they're there
 
-curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages?echo=true -D -
+curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" ^
+https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages?echo=true -D -
 
 # json response body
 
@@ -185,7 +196,56 @@ content-location: /v1/queues/my-queue/messages?echo=true
 date: Fri, 28 Mar 2025 20:12:57 GMT
 content-length: 728
 
-{"messages": [{"body": {"event": "1"}, "age": 250, "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae", "ttl": 3600}, {"body": {"event": "Two"}, "age": 250, "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af", "ttl": 3600}, {"body": {"event": "3"}, "age": 250, "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0", "ttl": 3600}, {"body": {"event": "Four"}, "age": 250, "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1", "ttl": 3600}, {"body": {"event": "5"}, "age": 250, "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2", "ttl": 3600}], "links": [{"href": "/v1/queues/my-queue/messages?marker=5&echo=true", "rel": "next"}]}
+{
+  "messages": [
+    {
+      "body": {
+        "event": "1"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "Two"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "3"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "Four"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "5"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2",
+      "ttl": 3600
+    }
+  ],
+  "links": [
+    {
+      "href": "/v1/queues/my-queue/messages?marker=5&echo=true",
+      "rel": "next"
+    }
+  ]
+}
 
 
 
@@ -215,7 +275,8 @@ https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name
 
 # GET stats again to show we have a claimed message
 
-curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/stats
+curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" ^
+https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/stats
 
 # json response body
 
@@ -236,3 +297,7 @@ curl -XGET -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "A
     "free": 4
   }
 }
+
+
+
+
