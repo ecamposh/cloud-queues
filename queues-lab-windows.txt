@@ -7,9 +7,6 @@
 
 https://curl.se/windows/dl-8.12.1_4/curl-8.12.1_4-win64-mingw.zip
 
-https://ultahost.com/knowledge-base/install-curl-on-windows/
-https://developer.zendesk.com/documentation/api-basics/getting-started/installing-and-using-curl/#using-curl-in-windows
-
 # Create a .vbs file
 notepad --> generate_uuid.vbs
 
