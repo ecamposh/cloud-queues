@@ -1,11 +1,24 @@
 
 ###### --- Basic Laboratory for Rackspace Cloud Queues --- ######
 
-# Download curl binary for Windows
-
-# Remember by default curl command under Windows PowerShell is only an alias for Invoke-WebRequest cmdlet, and that works really different from normal curl.
-
-https://curl.se/windows/dl-8.12.1_4/curl-8.12.1_4-win64-mingw.zip
+###### --- Please be aware --- ######
+​
+curl command on Windows PowerShell is only an alias for "Invoke-WebRequest" cmdlet, and this cmdlet has a different way of handling strings, json streams and objects, in addition to different options (flags).
+​
+Get-Alias -Definition Invoke-WebRequest
+​
+CommandType     Name                                               Version    Source                                                                                   
+-----------     ----                                               -------    ------                                                                                   
+Alias           curl -> Invoke-WebRequest                                                                                                                              
+Alias           iwr -> Invoke-WebRequest                                                                                                                               
+Alias           wget -> Invoke-WebRequest                                                                                                                              
+​
+## If you want to use real curl tool you can download it from
+https://curl.se/windows/
+​
+Uncompress it into C:\Windows\System32\curl2.exe
+​
+Change the name so you won't confuse it with the alias from PowerShell, otherwise you will need to change permanently the alias.
 
 # Create a .vbs file
 notepad --> generate_uuid.vbs
