@@ -1,0 +1,273 @@
+###### --- Basic Laboratory for Rackspace Cloud Queues --- ######
+
+Under a Linux machine install curl and jq.
+
+apt install curl jq
+
+yum install curl jq
+
+## Get Impersonation Token (API Token)
+
+token=$(curl -s -X "POST" "https://identity.api.rackspacecloud.com/v2.0/tokens" \
+-H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-d '{
+  "auth": {
+    "RAX-KSKEY:apiKeyCredentials": {
+      "username": "${username}",
+      "apiKey": "${api_key}"
+    }
+  }
+}' | jq -cr '.access.token.id')
+
+
+# Declare variables
+
+client_id=$(uuidgen)
+
+region=dfw
+
+tenant_id=XXXXXXX
+
+queue_name=my-queue
+
+
+# Create named queue:
+
+curl -XPUT -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name -D -
+
+# json response body
+
+HTTP/2 201 
+server: nginx/1.14.0 (Ubuntu)
+date: Fri, 28 Mar 2025 19:54:28 GMT
+location: /v1/queues/my-queue
+content-length: 0
+
+
+curl -sH "X-Auth-Token: $token" https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues
+
+
+# Get stats to show the Queue is empty
+
+curl -XGET -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats -D -
+
+# json response body
+
+HTTP/2 200 
+server: nginx/1.14.0 (Ubuntu)
+content-type: application/json; charset=utf-8
+content-location: /v1/queues/my-queue/stats
+date: Fri, 28 Mar 2025 19:57:03 GMT
+content-length: 51
+
+{"messages": {"claimed": 0, "total": 0, "free": 0}}
+
+
+# POST some random message data to the queue:
+
+curl -XPOST -D - -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://dfw.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages -d \
+'[
+  {
+    "ttl": 3600,
+    "body": {
+      "event": "1"
+    }
+  },
+  {
+    "ttl": 3600,
+    "body": {
+      "event": "Two"
+    }
+  },
+  {
+    "ttl": 3600,
+    "body": {
+      "event": "3"
+    }
+  },
+  {
+    "ttl": 3600,
+    "body": {
+      "event": "Four"
+    }
+  },
+  {
+    "ttl": 3600,
+    "body": {
+      "event": "5"
+    }
+  }
+]'
+
+# json response body
+
+HTTP/2 201 
+server: nginx/1.14.0 (Ubuntu)
+content-type: application/json; charset=utf-8
+date: Fri, 28 Mar 2025 20:08:47 GMT
+location: /v1/queues/my-queue/messages?ids=67e701cf38834c7f82a702ae,67e701cf38834c7f82a702af,67e701cf38834c7f82a702b0,67e701cf38834c7f82a702b1,67e701cf38834c7f82a702b2
+content-length: 353
+
+{
+  "partial": false,
+  "resources": [
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1",
+    "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2"
+  ]
+}
+
+
+
+# GET stats to show the queue is populated now
+
+curl -XGET -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats -D -
+
+# json response body
+
+HTTP/2 200 
+server: nginx/1.14.0 (Ubuntu)
+content-type: application/json; charset=utf-8
+content-location: /v1/queues/my-queue/stats
+date: Fri, 28 Mar 2025 20:10:33 GMT
+content-length: 313
+
+{
+  "messages": {
+    "claimed": 0,
+    "oldest": {
+      "age": 106,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+      "created": "2025-03-28T20:08:47Z"
+    },
+    "total": 5,
+    "newest": {
+      "age": 106,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2",
+      "created": "2025-03-28T20:08:47Z"
+    },
+    "free": 5
+  }
+}
+
+
+
+# GET messages to show they're there
+
+curl -XGET -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/messages?echo=true -D -
+
+# json response body
+
+HTTP/2 200 
+server: nginx/1.14.0 (Ubuntu)
+content-type: application/json; charset=utf-8
+content-location: /v1/queues/my-queue/messages?echo=true
+date: Fri, 28 Mar 2025 20:12:57 GMT
+content-length: 728
+
+{
+  "messages": [
+    {
+      "body": {
+        "event": "1"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "Two"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702af",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "3"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b0",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "Four"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b1",
+      "ttl": 3600
+    },
+    {
+      "body": {
+        "event": "5"
+      },
+      "age": 250,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2",
+      "ttl": 3600
+    }
+  ],
+  "links": [
+    {
+      "href": "/v1/queues/my-queue/messages?marker=5&echo=true",
+      "rel": "next"
+    }
+  ]
+}
+
+
+
+# Claim 1 message from the Queue
+
+curl -XPOST -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/claims?limit=1 -d \
+{"ttl":300, "grace":300}
+
+# json response body
+
+[
+  {
+    "body": {
+      "event": "1"
+    },
+    "age": 498,
+    "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae?claim_id=67e703c1553de5229e91f20b",
+    "ttl": 3600
+  }
+]
+
+
+
+# GET stats again to show we have a claimed message
+
+curl -XGET -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats
+
+# json response body
+
+{
+  "messages": {
+    "claimed": 1,
+    "oldest": {
+      "age": 578,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702ae",
+      "created": "2025-03-28T20:08:47Z"
+    },
+    "total": 5,
+    "newest": {
+      "age": 578,
+      "href": "/v1/queues/my-queue/messages/67e701cf38834c7f82a702b2",
+      "created": "2025-03-28T20:08:47Z"
+    },
+    "free": 4
+  }
+}
