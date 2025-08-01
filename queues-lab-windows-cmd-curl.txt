@@ -134,7 +134,7 @@ content-length: 51
 ]
 
 curl -XPOST -D - -sH "x-auth-token: %token%" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: %client_id%" ^
-https://dfw.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages -d @message.txt
+https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages -d @message.txt
 
 # json response body
 
