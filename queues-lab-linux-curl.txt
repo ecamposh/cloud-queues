@@ -1,4 +1,4 @@
-###### --- Basic Laboratory for Rackspace Cloud Queues --- ######
+###### --- Basic Laboratory for Rackspace Cloud Queues using curl under a Linux machine --- ######
 
 Under a Linux machine install curl and jq.
 
