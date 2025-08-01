@@ -1,0 +1,345 @@
+###### --- Basic Laboratory for Rackspace Cloud Queues using Windows PowerShell --- ######
+
+###### --- Please be aware --- ######
+​
+curl command on Windows PowerShell is only an alias for "Invoke-WebRequest" cmdlet, and this cmdlet has a different way of handling strings, json streams and objects, in addition to different options (flags).
+​
+Get-Alias -Definition Invoke-WebRequest
+​
+CommandType     Name                                               Version    Source                                                                                   
+-----------     ----                                               -------    ------                                                                                   
+Alias           curl -> Invoke-WebRequest                                                                                                                              
+Alias           iwr -> Invoke-WebRequest                                                                                                                               
+Alias           wget -> Invoke-WebRequest                                                                                                                              
+​
+
+###### --- Please first verify and establish the following values --- ######
+​
+### Temporarily establish TLS v1.2 protocol on current user
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+​
+### Temporarily establish TLS v1.2 protocol at system level
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+​
+### Establish execution policy to Unrestricted or RemoteSigned
+Get-ExecutionPolicy
+​
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force
+​
+###### --- Define your Rackspace credentials --- ######
+### Please use quotes
+
+## https://docs.rackspace.com/reference/cloud-identity-v2-getting-started-authenticate
+## https://docs.rackspace.com/docs/view-and-reset-your-api-key
+
+$apiKey = "<Your API Key>"
+$username = "<Your Username>"
+$authUrl = "https://identity.api.rackspacecloud.com/v2.0/tokens"
+​
+## Auth URL for London region
+$authUrl = "https://lon.identity.api.rackspacecloud.com/v2.0/tokens"
+​
+​
+###### --- Authenticate and get the token --- ######
+$authBody = @{
+    auth = @{
+        "RAX-KSKEY:apiKeyCredentials" = @{
+            username = $username
+            apiKey = $apiKey
+        }
+    }
+} | ConvertTo-Json
+​
+​
+###### --- Obtaining the whole json stream output from Rackspace Public Cloud Identity Endpoint --- ######
+$authResponse = Invoke-RestMethod -Uri $authUrl -Method Post -Body $authBody -ContentType "application/json"
+​
+​
+###### --- Obtaining Impersonation Token --- ######
+$token = $authResponse.access.token.id
+​
+$token
+
+#########################################################
+
+## Getting Queues Service Endpoints
+## https://docs-ospc.rackspace.com/cloud-queues/v1/general-api-info/service-access.html
+
+$authResponse.access.serviceCatalog | Select-Object -ExpandProperty name | Format-List
+
+$authResponse.access.serviceCatalog | Select-Object -ExpandProperty type | Format-List
+
+$authResponse.access.serviceCatalog | Select-Object -ExpandProperty endpoints | Format-List
+
+$authResponse.access.serviceCatalog | Where-Object { $_.name -eq "cloudQueues" } | Format-List
+
+$authResponse.access.serviceCatalog | Where-Object { $_.name -eq "cloudQueues" } | Select-Object -ExpandProperty endpoints | Format-List
+
+####################################################
+
+# Declare variables
+
+$client_id = [System.Guid]::NewGuid().ToString()
+
+## https://docs.rackspace.com/docs/about-regions
+$region = "dfw"
+
+$tenant_id = "<Your Account ID>"
+
+$queue_name = "my-queue"
+
+#######################################################
+
+## https://docs-ospc.rackspace.com/cloud-queues/quickstart/
+
+# Create queue:
+
+$uriQueueName = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+## But you won't get headers
+## $createQueue = Invoke-RestMethod -Uri $uri -Method Put -Headers $headers -Verbose
+
+$createQueue = Invoke-WebRequest -Uri $uriQueueName -Method Put -Headers $headers -Verbose
+
+$createQueue.Headers | Format-Table -AutoSize
+
+Key            Value                        
+---            -----                        
+Connection     keep-alive                   
+Content-Length 0                            
+Date           Fri, 01 Aug 2025 05:06:27 GMT
+Location       /v1/queues/my-queue          
+Server         nginx/1.14.0 (Ubuntu)
+
+
+$createQueue.BaseResponse
+
+$createQueue.RawContent
+
+
+###################################################
+
+## List Queues
+
+$uriQueues = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$checkQueues = Invoke-WebRequest -Uri $uriQueues -Method Get -Headers $headers -Verbose
+
+$checkQueues.Content | Format-Table -AutoSize
+
+$checkQueues.Headers
+
+$checkQueues.BaseResponse
+
+$checkQueues.RawContent
+
+
+####################################################
+
+# Get stats to show the Queue is empty
+
+$uriQueueStats = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$queueStats = Invoke-WebRequest -Uri $uriQueueStats -Method Get -Headers $headers -Verbose
+
+$queueStats.Content | Format-Table -AutoSize
+
+$queueStats.Headers
+
+$queueStats.BaseResponse
+
+$queueStats.RawContent
+
+
+#################################
+
+
+# POST some random message data to the queue:
+
+$uriMessageToQueue = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/messages"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$body = @(
+    @{
+        ttl = 3600
+        body = @{
+            event = "1"
+        }
+    },
+    @{
+        ttl = 3600
+        body = @{
+            event = "Two"
+        }
+    },
+    @{
+        ttl = 3600
+        body = @{
+            event = "3"
+        }
+    },
+    @{
+        ttl = 3600
+        body = @{
+            event = "Four"
+        }
+    },
+    @{
+        ttl = 3600
+        body = @{
+            event = "5"
+        }
+    }
+) | ConvertTo-Json -Depth 3
+
+try {
+    $messageToQueue = Invoke-WebRequest -Uri $uriMessageToQueue -Method Post -Headers $headers -Body $body -Verbose -ErrorAction Stop
+    $messageToQueue.Headers | Format-Table -AutoSize
+    $messageToQueue.Location | ConvertFrom-Json | Format-Table -AutoSize
+} catch {
+    Write-Error "Request failed: $_"
+}
+
+$messageToQueue.Content
+
+$messageToQueue.RawContent
+
+########################################################
+
+
+# GET stats to show the queue is populated now
+
+$uriQueueStats = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$queueStats = Invoke-WebRequest -Uri $uriQueueStats -Method Get -Headers $headers -Verbose
+
+$queueStats.Content
+
+$queueStats.Content | ConvertFrom-Json | Format-Table -AutoSize
+
+$queueStats.Headers
+
+$queueStats.BaseResponse
+
+$queueStats.RawContent
+
+
+#######################################################
+
+
+# GET messages to show they're there
+
+$uriListMessages = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/messages?echo=true"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+try {
+    $listMessages = Invoke-WebRequest -Uri $uriListMessages -Method Get -Headers $headers -Verbose -ErrorAction Stop
+    $listMessages.Headers | Format-Table -AutoSize
+    $listMessages.Content | ConvertFrom-Json | Format-Table -AutoSize
+} catch {
+    Write-Error "Request failed: $_"
+}
+
+$listMessages.Content
+
+$listMessages.Headers
+
+$listMessages.BaseResponse
+
+$listMessages.RawContent
+
+
+########################################################
+
+
+# Claim 1 message from the Queue
+
+$uriClaimMessage = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/claims?limit=1"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$body = @{
+    ttl = 300
+    grace = 300
+} | ConvertTo-Json
+
+try {
+    $messageClaimed = Invoke-WebRequest -Uri $uriClaimMessage -Method Post -Headers $headers -Body $body -Verbose -ErrorAction Stop
+    $messageClaimed.Headers | Format-Table -AutoSize
+    $messageClaimed.Content | ConvertFrom-Json | Format-Table -AutoSize
+} catch {
+    Write-Error "Request failed: $_"
+}
+
+$messageClaimed.Content | ConvertFrom-Json | Format-Table -AutoSize
+
+#############################################
+
+
+# GET stats again to show we have a claimed message
+
+$uriQueueStats = "https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/stats"
+
+$headers = @{
+    "x-auth-token" = $token
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
+    "Client-ID" = $client_id
+}
+
+$queueStats = Invoke-WebRequest -Uri $uriQueueStats -Method Get -Headers $headers -Verbose
+
+$queueStats.Content
+
+$queueStats.Content | ConvertFrom-Json | Format-Table -AutoSize
+
+$queueStats.Headers
+
+$queueStats.BaseResponse
+
+$queueStats.RawContent
