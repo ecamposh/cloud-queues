@@ -75,6 +75,8 @@ location: /v1/queues/my-queue
 content-length: 0
 
 
+# List queues
+
 curl -sH "X-Auth-Token: %token%" https://%region%.queues.api.rackspacecloud.com/v1/%tenant_id%/queues
 
 
