@@ -69,7 +69,7 @@ content-length: 51
 # POST some random message data to the queue:
 
 curl -XPOST -D - -sH "x-auth-token: $token" -H "Content-Type: application/json" -H "Accept: application/json" -H "Client-ID: $client_id" \
-https://dfw.queues.api.rackspacecloud.com/v1/%tenant_id%/queues/%queue_name%/messages -d \
+https://$region.queues.api.rackspacecloud.com/v1/$tenant_id/queues/$queue_name/messages -d \
 '[
   {
     "ttl": 3600,
