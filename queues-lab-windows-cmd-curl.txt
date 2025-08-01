@@ -1,5 +1,5 @@
 
-###### --- Basic Laboratory for Rackspace Cloud Queues --- ######
+###### --- Basic Laboratory for Rackspace Cloud Queues using curl under Windows CMD --- ######
 
 ###### --- Please be aware --- ######
 ​
